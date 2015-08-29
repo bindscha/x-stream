@@ -1,0 +1,56 @@
+A termination proof for the mis algorithm implemented for undirected graphs
+G=(V,E):
+
+Let V(i) be the MIS at the end of the ith superstep.
+
+Theorem 1: 
+(1) V(2*n) is an independent set. 
+(2) For any edge (u,v) with u in V(2*n) and v outside, u < v.
+(3) V(2*n + 1) 
+
+Trivially true for V(0) as the lower numbered end votes out the higher numbered
+end.
+
+Assume that it is true till V(2*i). 
+
+Since V(2*i) is independent no vertex can be voted out of it and hence 
+V(2*i + 1) contains V(2*i). The vertices in V(2*i + 1) - V(2*i) cannot be
+connected to any vertex in V(2*i) as any such connection must be from a lower
+numbered vertex in V(2*i) and hence would have out-voted the other
+vertex. Therefore V(2*i + 1) consists of two disconnected partitions V(2*i) and
+V(2*i + 1) - V(2*i).
+
+At the next step therefore, not only does V(2*i) survive but in addition the
+edges connecting vertices in V(2*i + 1) - V(2*i) out-vote all the higher
+numbered ends. V(2*i + 2) hence satisfies both (1) and (2).
+
+Theorem 2: If V(2*n + 1) is strictly larger than V(2*n) then V(2*n + 2) is
+strictly larger than V(2*n).
+
+Proof: This means at least one vertex has been added to V(2*n + 1). Let u be the
+minimum numbered vertex in V(2*n + 1) - V(2*n). u cannot be out-voted from a
+vertex in V(2*n) as those are disconnected from the ones in V(2*n + 1). u being
+the minimum numbered vertex in V(2*n + 1) - V(2*n) cannot be out-voted by any
+other vertex in that partition either. Hence u must be in V(2*n + 2).
+
+
+Theorem: The algorithm terminates when the MIS is maximal and independent. Note
+that the algorithm terminates when the MIS does not change.
+
+Proof: Assuming that the size of the MIS does not change from 2*n to 2*n +
+1. Therefore every vertex in V - V(2*n) must have at least one edge into V(2*n).
+Therefore V(2*n) is maximal and independent by Theorem (1). The termination is
+therefore correct.
+
+V(2*n) covers every edge in G as otherwise an uncovered
+edge would have added its lower numbered vertex to the MIS. The termination in
+this case is therefore correct as the MIS is independent by theorem 1.
+
+If the MIS does not change from 2*n + 1 to 2*n + 2 then this means that V(2n +
+1) is independent as otherwise at least some vertex is voted out. Further V(2n +
+1) must be maximal. Then there exists some vertices with no connection into V(2n
++ 1). In such a case however the minimum numbered vertex would have been added
+to V(2n + 1).
+
+
+

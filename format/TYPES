@@ -1,0 +1,14 @@
+#        | Short description
+--------------------------------------------------------------------------------
+1        | Only edge lists. Entries are triples of the form: 
+         | <8 byte src, 8 byte dst, 8 byte double typed weight>
+--------------------------------------------------------------------------------
+1        | Only edge lists. Entries are triples of the form: 
+COMPACT  | <4 byte src, 4 byte dst, 4 byte float typed weight>
+--------------------------------------------------------------------------------
+2        | Only edge lists. Entries are tuples of the form: 
+         | <8 byte src, 8 byte dst>
+--------------------------------------------------------------------------------
+2        | Only edge lists. Entries are tuples of the form: 
+COMPACT  | <4 byte src, 4 byte dst>
+--------------------------------------------------------------------------------
