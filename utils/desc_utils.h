@@ -26,7 +26,8 @@ extern boost::property_tree::ptree pt;
 static void init_graph_desc(const std::string& graph_name)
 {
   try {
-    boost::property_tree::ini_parser::read_ini(graph_name + ".ini", pt);
+    std::string last_name = graph_name.substr(graph_name.find_last_of("/\\") + 1);
+    boost::property_tree::ini_parser::read_ini(last_name + ".ini", pt);
   }
   catch(...) {
     BOOST_LOG_TRIVIAL(fatal) << "Unable to read property file";

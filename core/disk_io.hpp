@@ -74,7 +74,7 @@ namespace x_lib {
       }
     }
 
-    void do_read_IO(int fd,
+    int do_read_IO(int fd,
 		    unsigned char *buffer,
 		    unsigned char *disk_page,
 		    unsigned long bytes,
@@ -98,7 +98,7 @@ namespace x_lib {
 	bytes -= copy_bytes; 
 	buffer_offset += copy_bytes;
 	if(bytes == 0) {
-	  return;
+	  return 1;
 	}
       }
       // Read from disk
@@ -109,19 +109,29 @@ namespace x_lib {
 	  continue;
 	}
 	if(is_aligned(buffer + buffer_offset)) {
-	  read_from_file(fd, buffer + buffer_offset, io_size);
+	  int retval = read_from_file(fd, buffer + buffer_offset, io_size);
+   	  if(retval == -1){
+		return -1;
+	  }
 	}
 	else {
-	  read_from_file(fd, bounce_buffer, io_size);
+	  int retval = read_from_file(fd, bounce_buffer, io_size);
+	  if(retval == -1){
+		return -1;
+ 	  }
 	  memcpy(buffer + buffer_offset, bounce_buffer, io_size);
 	}
 	buffer_offset += io_size;
 	bytes -= io_size;
       }
       if(bytes) {
-	read_from_file_atomic(fd, disk_page, DISK_PAGE_SIZE);
+	int retval = read_from_file_atomic(fd, disk_page, DISK_PAGE_SIZE);
+        if(retval == -1){
+		return -1;
+	}
 	memcpy(buffer + buffer_offset, disk_page, bytes);
       }
+      return 1;
     }
 
     void do_write_IO(int fd, 
@@ -173,14 +183,32 @@ namespace x_lib {
 	memcpy(disk_page, buffer, buffer_bytes);
       }
     }
-
+	
+    // HDFS interface is added in this function
     void read_operator(disk_stream *inflight)
     {
       if(inflight->one_shot) {
-	rewind_file(inflight->superp_fd[inflight->request_superp]);
-	read_from_file(inflight->superp_fd[inflight->request_superp],
+	if(vm.count("hdfs")){
+ 	   using namespace x_lib;
+	   std::cout << "read one shot" << std::endl;
+	   inflight->refreshRDfd(inflight->request_superp);
+	}
+	else{
+	   rewind_file(inflight->superp_fd[inflight->request_superp]);
+        }
+	int retval = read_from_file(inflight->superp_fd[inflight->request_superp],
 		       inflight->request->buffer,
 		       inflight->request->bufsize);
+	//if read operation fails, try to reopen the file and read again
+	if(retval == -1){
+		inflight->refreshRDfd(inflight->request_superp);
+		retval = read_from_file(inflight->superp_fd[inflight->request_superp],
+                       inflight->request->buffer,
+                       inflight->request->bufsize);
+		if(retval == -1){
+	    	  exit(-1);
+		}
+	}
 	inflight->one_shot = false;
 	inflight->request->uptodate = true;
 	return;
@@ -197,11 +225,23 @@ namespace x_lib {
       BOOST_ASSERT_MSG(inflight->disk_pos[inflight->request_superp] 
 		       <= inflight->disk_bytes[inflight->request_superp],
 		       "Trying to read past end of stream !");
-      do_read_IO(inflight->superp_fd[inflight->request_superp],
+      int retval =  do_read_IO(inflight->superp_fd[inflight->request_superp],
 		 inflight->request->buffer,
 		 inflight->disk_pages[inflight->request_superp],
 		 bytes,
 		 disk_buffer_pos);
+      //if read operation fails, try to reopen the file and read again
+      if(retval == -1){
+	inflight->refreshRDfd(inflight->request_superp);
+	retval = do_read_IO(inflight->superp_fd[inflight->request_superp],
+                 inflight->request->buffer,
+                 inflight->disk_pages[inflight->request_superp],
+                 bytes,
+                 disk_buffer_pos);
+	if(retval == -1){
+	  exit(-1);
+	}
+      }
       inflight->request->uptodate = true;
     }
 
@@ -386,6 +426,7 @@ namespace x_lib {
       }
     }
     
+    //  HDFS interface is added in this function
     void write_internal(disk_stream *inflight)
     {
       BOOST_ASSERT_MSG(inflight->request->dirty,
@@ -393,14 +434,23 @@ namespace x_lib {
       
       // Special case: one shot
       if(inflight->one_shot) {
-	rewind_file(inflight->superp_fd[inflight->request_superp]);
+        //reopen the file for HDFS library
+	if(vm.count("hdfs")){
+ 	   using namespace x_lib;
+	   std::cout << "write one shot" << std::endl;
+	   hdfs_io::get_instance().turnOnRefreshWR(inflight->superp_fd[inflight->request_superp]);
+	   hdfs_io::get_instance().refreshWriteHandle(inflight->superp_fd[inflight->request_superp]);
+	}
+	else{
+	   rewind_file(inflight->superp_fd[inflight->request_superp]);
+	}
 	write_to_file(inflight->superp_fd[inflight->request_superp],
 		      inflight->request->buffer, 
 		      inflight->request->bufsize);
 	inflight->one_shot = false;
 	inflight->request->dirty = false;
 	inflight->request->uptodate = true;
-	return;
+        return;
       }
       for(unsigned long i=0;i<inflight->superp_cnt;i++) {
        	if(i == inflight->request->skip_superp) {

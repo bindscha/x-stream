@@ -14,12 +14,13 @@ all: $(LIBS) $(TARGETS) generators
 
 CXX?= g++
 
-CXXFLAGS?= -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib
-#CXXFLAGS?= -O3 -g -Wall -Wno-unused-function
+#CXXFLAGS?= -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib
+CXXFLAGS?= -O3 -g -Wall -Wno-unused-function
 #CXXFLAGS?= -g
 CXXFLAGS += -Wfatal-errors
 EXTRA_INCLUDES=-include core/types.h
 EXTRA_INCLUDES+=-I/usr/local/include/boost-numeric-bindings
+EXTRA_INCLUDES+=-I/home/junzhao/hadoop/hadoop-2.5.2/include
 
 #Graph size limits
 CXXFLAGS += -DCOMPACT_GRAPH
@@ -35,8 +36,8 @@ CXXFLAGS += -msse4.2
 #CXXFLAGS += -mavx2
 
 #System libraries
-SYSLIBS = -lboost_system -lboost_program_options -lboost_thread -lz -lrt
-# Uncomment for ALS
+SYSLIBS = -lboost_system -lboost_program_options -lboost_thread -lz -lrt -I/home/junzhao/hadoop/hadoop-2.5.2/include -L/home/junzhao/hadoop/hadoop-2.5.2/lib/native -L/usr/lib/jvm/java-8-oracle/jre/lib/amd64/server -ljvm -lhdfs
+#Uncomment for ALS
 #SYSLIBS += -llapack
 
 #Python support (uncomment following lines)

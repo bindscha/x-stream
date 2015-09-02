@@ -1,0 +1,43 @@
+
+                            X-Stream Installation
+  
+  Installation
+  ------------
+
+  X-Stream requires boost to work. To build and install X-Stream just run:
+
+    $ make
+    $ make install
+
+  The default installation prefix is /usr/local. You can change this to prefix
+  PREFIX by running:
+
+    $ make install prefix=PREFIX
+
+  ALS
+  ---
+
+  Alternating Least Squares algorithm in X-Stream requires additional
+  dependencies. Because of this, it is commented out in the code. It requires
+  the LAPACK linear algebra library and boost numeric bindings to be able to
+  use it.
+
+  To install the LAPACK library on Debian/Ubuntu run:
+
+    $ apt-get install liblapack-dev
+
+  You can get boost numeric bindings from
+  http://mathema.tician.de/software/boost-numeric-bindings. Either check out
+  from the git repository or download a ready-made archive and unpack it. Then
+  run:
+
+    $ cd boost-numeric-bindings 
+    $ ./configure 
+    $ make install
+
+  X-Stream Makefile assumes bindings are installed with the default prefix
+  /usr/local. If you change this, adapt the Makefile accordingly.
+
+  Finally, uncomment the lines related to ALS in benchmark/driver.cpp and the
+  following line in the Makefile: SYSLIBS += -llapack, and run make again.
+

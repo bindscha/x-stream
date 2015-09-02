@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="95">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="benchmarks">
+        <in>driver.cpp</in>
+      </df>
+      <df name="core">
+        <in>core.cpp</in>
+      </df>
+      <df name="generators">
+        <df name="prng">
+          <in>splittable_mrg.c</in>
+          <in>utils.c</in>
+        </df>
+        <in>options.cpp</in>
+        <in>output.cpp</in>
+        <in>random.cpp</in>
+        <in>rmat.cpp</in>
+      </df>
+      <df name="utils">
+        <in>feeder.cpp</in>
+        <in>mem_speed_random.cpp</in>
+        <in>mem_speed_sequential.cpp</in>
+        <in>sort_edges.cpp</in>
+        <in>utils.cpp</in>
+        <in>zpipe.c</in>
+      </df>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <compilerSet>GNU|GNU</compilerSet>
+        <dependencyChecking>false</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <codeAssistance>
+      </codeAssistance>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <executablePath>bin/benchmark_driver</executablePath>
+        </makeTool>
+      </makefileType>
+      <item path="benchmarks/driver.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="core/core.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <folder path="0/benchmarks">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/local/include/boost-numeric-bindings</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <incFile>
+            <pElem>core/types.h</pElem>
+          </incFile>
+          <preprocessorList>
+            <Elem>COMPACT_GRAPH</Elem>
+            <Elem>ZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/core">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/local/include/boost-numeric-bindings</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <incFile>
+            <pElem>core/types.h</pElem>
+          </incFile>
+          <preprocessorList>
+            <Elem>COMPACT_GRAPH</Elem>
+            <Elem>ZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/generators">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NDEBUG</Elem>
+            <Elem>NOISE</Elem>
+            <Elem>VALUE_TYPE_32</Elem>
+            <Elem>VERTEX_TYPE_32</Elem>
+            <Elem>WEIGHT</Elem>
+            <Elem>restrict=__restrict__</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/generators/prng">
+        <ccTool>
+          <incDir>
+            <pElem>generators</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/utils">
+        <ccTool>
+          <incDir>
+            <pElem>/usr/local/include/boost-numeric-bindings</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <incFile>
+            <pElem>core/types.h</pElem>
+          </incFile>
+          <preprocessorList>
+            <Elem>COMPACT_GRAPH</Elem>
+            <Elem>ZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <item path="generators/options.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="generators/output.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="generators/prng/splittable_mrg.c" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="generators/prng/utils.c" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="generators/random.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="generators/rmat.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="utils/feeder.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="utils/mem_speed_random.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="utils/mem_speed_sequential.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="utils/sort_edges.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="utils/utils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="utils/zpipe.c" ex="false" tool="1" flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
