@@ -1,0 +1,50 @@
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -include core/types.h -I/usr/local/include/boost-numeric-bindings -c -o object_files/core.o core/core.cpp
+g++ -MM -MT 'object_files/core.o' core/core.cpp > object_files/core.d
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -include core/types.h -I/usr/local/include/boost-numeric-bindings -c -o object_files/utils.o utils/utils.cpp
+g++ -MM -MT 'object_files/utils.o' utils/utils.cpp > object_files/utils.d
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -include core/types.h -I/usr/local/include/boost-numeric-bindings -c -o object_files/driver.o benchmarks/driver.cpp
+In file included from benchmarks/../algorithms/hyper-anf/hyper-anf.hpp:25:0,
+                 from benchmarks/driver.cpp:55:
+benchmarks/../algorithms/hyper-anf/../../utils/hyperloglog.h: In function ‘long unsigned int jenkins(long unsigned int, long unsigned int)’:
+benchmarks/../algorithms/hyper-anf/../../utils/hyperloglog.h:95:5: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+   c = 0x9e3779b97f4a7c13L; /* the golden ratio; an arbitrary value */
+     ^
+benchmarks/../algorithms/hyper-anf/../../utils/hyperloglog.h:96:30: warning: right shift count >= width of type [enabled by default]
+   a -= b; a -= c; a ^= (c >> 43);
+                              ^
+benchmarks/../algorithms/hyper-anf/../../utils/hyperloglog.h:99:30: warning: right shift count >= width of type [enabled by default]
+   a -= b; a -= c; a ^= (c >> 38);
+                              ^
+benchmarks/../algorithms/hyper-anf/../../utils/hyperloglog.h:102:30: warning: right shift count >= width of type [enabled by default]
+   a -= b; a -= c; a ^= (c >> 35);
+                              ^
+benchmarks/../algorithms/hyper-anf/../../utils/hyperloglog.h:103:30: warning: left shift count >= width of type [enabled by default]
+   b -= c; b -= a; b ^= (a << 49);
+                              ^
+In file included from benchmarks/driver.cpp:55:0:
+benchmarks/../algorithms/hyper-anf/hyper-anf.hpp: In static member function ‘static void algorithm::sg_simple::hyperanf<F>::preprocessing()’:
+benchmarks/../algorithms/hyper-anf/hyper-anf.hpp:218:55: warning: left shift count >= width of type [enabled by default]
+  if(pt.get<unsigned long>("graph.vertices") > (1UL << 60)) {
+                                                       ^
+g++ -MM -MT 'object_files/driver.o' benchmarks/driver.cpp > object_files/driver.d
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -o bin/benchmark_driver object_files/driver.o object_files/core.o object_files/utils.o -lboost_system -lboost_program_options -lboost_thread -lz -lrt
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -include core/types.h -I/usr/local/include/boost-numeric-bindings -c -o object_files/mem_speed_sequential.o utils/mem_speed_sequential.cpp
+g++ -MM -MT 'object_files/mem_speed_sequential.o' utils/mem_speed_sequential.cpp > object_files/mem_speed_sequential.d
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -o bin/mem_speed_sequential object_files/mem_speed_sequential.o object_files/core.o object_files/utils.o -lboost_system -lboost_program_options -lboost_thread -lz -lrt
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -include core/types.h -I/usr/local/include/boost-numeric-bindings -c -o object_files/sort_edges.o utils/sort_edges.cpp
+g++ -MM -MT 'object_files/sort_edges.o' utils/sort_edges.cpp > object_files/sort_edges.d
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -o bin/sort_edges object_files/sort_edges.o object_files/core.o object_files/utils.o -lboost_system -lboost_program_options -lboost_thread -lz -lrt
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -include core/types.h -I/usr/local/include/boost-numeric-bindings -c -o object_files/mem_speed_random.o utils/mem_speed_random.cpp
+g++ -MM -MT 'object_files/mem_speed_random.o' utils/mem_speed_random.cpp > object_files/mem_speed_random.d
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -o bin/mem_speed_random object_files/mem_speed_random.o object_files/core.o object_files/utils.o -lboost_system -lboost_program_options -lboost_thread -lz -lrt
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -include core/types.h -I/usr/local/include/boost-numeric-bindings -c -o object_files/zpipe.o utils/zpipe.c
+g++ -MM -MT 'object_files/zpipe.o' utils/zpipe.c > object_files/zpipe.d
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -o bin/zpipe object_files/zpipe.o object_files/core.o object_files/utils.o -lboost_system -lboost_program_options -lboost_thread -lz -lrt
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -include core/types.h -I/usr/local/include/boost-numeric-bindings -c -o object_files/feeder.o utils/feeder.cpp
+g++ -MM -MT 'object_files/feeder.o' utils/feeder.cpp > object_files/feeder.d
+g++ -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib -Wfatal-errors -DCOMPACT_GRAPH -DZLIB_COMPRESSION_LEVEL=Z_BEST_SPEED -msse4.2 -o bin/feeder object_files/feeder.o object_files/core.o object_files/utils.o -lboost_system -lboost_program_options -lboost_thread -lz -lrt
+/usr/bin/make -C generators
+make[1]: Entering directory `/home/yoga/x-stream_release/generators'
+g++ -std=c++0x -DNDEBUG -O3 -Wall -Drestrict=__restrict__ -ffast-math -L/usr/local/lib -DVERTEX_TYPE_32 -DVALUE_TYPE_32 -DNOISE -DWEIGHT random.cpp prng/splittable_mrg.c prng/utils.c options.cpp output.cpp -o erdos-renyi -lboost_program_options -lboost_thread -lboost_system
+g++ -std=c++0x -DNDEBUG -O3 -Wall -Drestrict=__restrict__ -ffast-math -L/usr/local/lib -DVERTEX_TYPE_32 -DVALUE_TYPE_32 -DNOISE -DWEIGHT rmat.cpp prng/splittable_mrg.c prng/utils.c options.cpp output.cpp -o rmat -lboost_program_options -lboost_thread -lboost_system
+make[1]: Leaving directory `/home/yoga/x-stream_release/generators'

@@ -20,6 +20,7 @@
 #define _CLOCK_UTILS_
 
 #include "clock.hpp"
+#include <fstream>
 #include<sys/time.h>
 #include "boost_log_wrapper.h"
 
@@ -59,6 +60,20 @@ class rtc_clock:public clock {
   {
     double elapsed_seconds = (double)elapsed_useconds/1000000;
     BOOST_LOG_TRIVIAL(info) << header << " " << elapsed_seconds << " seconds";
+  }
+  //By Junyao: output to file
+  void writeToFile(const char filename[], bool end)
+  {
+      double elapsed_seconds = (double)elapsed_useconds/1000000;
+      using namespace std;
+      fstream fs(filename, ios::out|ios::app);
+      if(end){
+          fs << elapsed_seconds << endl;
+      }
+      else{
+          fs << elapsed_seconds << ",";
+      }
+      fs.close();
   }
 };
 

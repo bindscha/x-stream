@@ -133,8 +133,7 @@ namespace algorithm {
       }
     }
 
-    static per_processor_data * 
-    create_per_processor_data(unsigned long processor_id)
+    static per_processor_data * create_per_processor_data(unsigned long processor_id)
     {
       return sg_pcpu::per_cpu_array[processor_id];
     }
@@ -270,7 +269,7 @@ namespace algorithm {
       unsigned long updates_out_stream = (PHASE == 0 ? updates0_stream:updates1_stream);
       graph_storage->rewind_stream(edge_stream);
       for(unsigned long i=0;i<graph_storage->get_config()->super_partitions;i++) {
-	if(graph_storage->get_config()->super_partitions > 1) {
+        if(graph_storage->get_config()->super_partitions > 1) {
 	  if(sg_pcpu::bsp_phase > 0) {
 	    graph_storage->state_load(vertex_stream, i);
 	  }
@@ -288,7 +287,7 @@ namespace algorithm {
 	    state_iter_cost.stop();
 	  }
 	}
-	sg_pcpu::current_step = phase_gather;
+        sg_pcpu::current_step = phase_gather;
 	if(measure_scatter_gather) {
 	    gather_cost.start();
 	}
@@ -300,7 +299,7 @@ namespace algorithm {
 	  gather_cost.stop();
 	}
 	graph_storage->reset_stream(updates_in_stream, i);
-	sg_pcpu::current_step = phase_scatter;
+        sg_pcpu::current_step = phase_scatter;
 	x_lib::do_cpu<scatter_gather<A, F> >(graph_storage, i);
 	if(measure_scatter_gather) {
 	  scatter_cost.start();
@@ -312,7 +311,7 @@ namespace algorithm {
 	if(measure_scatter_gather) {
 	  scatter_cost.stop();
 	}
-	sg_pcpu::current_step = phase_post_scatter;
+        sg_pcpu::current_step = phase_post_scatter;
 	if(i == (graph_storage->get_config()->super_partitions - 1)) {
 	  sg_pcpu::do_algo_reduce = true;
 	}
@@ -355,6 +354,11 @@ namespace algorithm {
     x_lib::do_cpu<scatter_gather<A, F> >(graph_storage, ULONG_MAX);
     setup_time.start();
     graph_storage->terminate();
+    if(vm.count("hdfs")){
+        //By Junyao: close all hdfs file
+        using namespace x_lib;
+        hdfs_io::get_instance().closeAll();
+    }
     setup_time.stop();
     wall_clock.stop();
     BOOST_LOG_TRIVIAL(info) << "CORE::PHASES " << sg_pcpu::bsp_phase;
@@ -366,8 +370,12 @@ namespace algorithm {
     }
     sg_pcpu::pc_clock.print("TIME_IN_PC_FN");
     wall_clock.print("CORE::TIME::WALL");
+    if(vm.count("filename")){
+        setup_time.writeToFile(vm["filename"].as<std::string>().c_str(), false);
+        wall_clock.writeToFile(vm["filename"].as<std::string>().c_str(), true);
+    }
   }
-
+  
   template<typename A, typename F>
   void scatter_gather<A, F>::partition_pre_callback(unsigned long superp, 
 						    unsigned long partition,
