@@ -22,6 +22,8 @@
 #include "x-splitter.hpp"
 #include "../utils/memory_utils.h"
 #include "../utils/barrier.h"
+#include <cstring>
+#include <string>
 #include<zlib.h>
 
 #ifdef PYTHON_SUPPORT
@@ -340,6 +342,7 @@ namespace x_lib {
     const unsigned long superp_cnt;
     const unsigned long stream_unit_bytes;
     int *superp_fd;
+    std::string *superp_fname;
     unsigned long *disk_pos;
     bool eof_flag;
     unsigned long *disk_bytes;
@@ -360,6 +363,7 @@ namespace x_lib {
     bool *zlib_eof;
     bool z_inflate_mode;
     unsigned long max_io_unit;
+	
 
     bool eof(unsigned long superp)
     {
@@ -445,7 +449,44 @@ namespace x_lib {
     {
       return (cache == NULL) && (request == NULL) && disk_empty();
     }
-    
+
+    //reopen the file in read mode for hdfs_fuse, libhdfs, libhdfs3
+    void refreshRDfd(int superp)
+    {
+        if(vm.count("fuse")){
+	    close(superp_fd[superp]);
+	    superp_fd[superp] = open(superp_fname[superp].c_str(), O_RDWR | O_LARGEFILE,
+                                    S_IRWXU);
+	}
+	else if(vm.count("hdfs")){
+	    using namespace x_lib;
+            hdfs_io::get_instance().refreshReadHandle(superp_fd[superp]);
+        }
+    }
+
+    //add these two interface such that Stream_IO can close and reopen the file in write mode
+    void turnOnWRrefresh(int superp)
+    {
+	if(vm.count("hdfs")){
+            using namespace x_lib;
+            hdfs_io::get_instance().turnOnRefreshWR(superp_fd[superp]);
+        }
+    }
+
+    void refreshWRfd(int superp)
+    {
+        if(vm.count("fuse")){
+            close(superp_fd[superp]);
+            superp_fd[superp] = open(superp_fname[superp].c_str(), O_RDWR | O_LARGEFILE | O_CREAT | O_TRUNC,
+                                    S_IRWXU);
+        }
+	else if(vm.count("hdfs")){
+            using namespace x_lib;
+            hdfs_io::get_instance().turnOnRefreshWR(superp_fd[superp]);
+            hdfs_io::get_instance().refreshWriteHandle(superp_fd[superp]);
+        }
+    }
+
     disk_stream(const char * fname,
 		bool new_file,
 		bool is_compressed,
@@ -470,6 +511,7 @@ namespace x_lib {
        max_io_unit(max_io_unit_in)
     {
       superp_fd    = new int[superp_cnt];
+      superp_fname    = new std::string[superp_cnt];
       disk_pos     = new unsigned long[superp_cnt];
       disk_bytes   = new unsigned long[superp_cnt];
       disk_pages   = new unsigned char *[superp_cnt];
@@ -479,28 +521,67 @@ namespace x_lib {
       for(unsigned long i=0;i<superp_cnt;i++) {
 	disk_pages[i] = (unsigned char *)
 	  map_anon_memory(DISK_PAGE_SIZE, true, "Disk page");
-	// open the fds
 	std::stringstream full_name;
-	full_name << io_queue->get_mnt_pt() << "/"; 
-	if(i==0) {
+        if (! vm.count("hdfs") && ! vm.count("fuse")){
+            full_name << io_queue->get_mnt_pt() << "/"; 
+	}
+        else if(vm.count("hdfs") && ! vm.count("fuse")){
+            //full_name << "/hpgp_data/";
+	    full_name << vm["graphpath"].as<std::string>() << "/";
+        }
+        else if(! vm.count("hdfs") && vm.count("fuse")){
+            //full_name << "/export/hdfs/hpgp_data/";
+	    full_name << vm["graphpath"].as<std::string>() << "/";
+        }
+        if(i==0) {
 	  full_name << fname;
 	}
 	else {
 	  full_name << fname << "." << i;
 	}
-	if(vm.count("no_dio") > 0) {
-	  superp_fd[i] = open(full_name.str().c_str(),
-			      O_RDWR|O_LARGEFILE|
-			      (new_file ? (O_CREAT|O_TRUNC): 0),
-			      S_IRWXU);
-	}
-	else {
-	  superp_fd[i] = open(full_name.str().c_str(),
-			      O_RDWR|O_LARGEFILE|O_DIRECT|
-			      (new_file ? (O_CREAT|O_TRUNC): 0),
-			      S_IRWXU);
-	}
-	if(superp_fd[i] == -1) {
+        if (! vm.count("hdfs")){
+            if (vm.count("fuse")){
+                //we don't want to truncate graph file
+                //if(full_name.str() == ("/export/hdfs/hpgp_data/" + pt.get<std::string>("graph.name"))){
+	        if(full_name.str() == (vm["graphpath"].as<std::string>() + pt.get<std::string>("graph.name"))){
+                    superp_fd[i] = open(full_name.str().c_str(),
+                                O_RDWR | O_LARGEFILE ,
+                                S_IRWXU);
+                }
+                else{
+                    superp_fd[i] = open(full_name.str().c_str(),
+                                O_RDWR | O_LARGEFILE | O_CREAT | O_TRUNC,
+                                S_IRWXU);
+                }    
+            }
+            else {
+                if (vm.count("no_dio") > 0) {
+                    superp_fd[i] = open(full_name.str().c_str(),
+                            O_RDWR | O_LARGEFILE |
+                            (new_file ? (O_CREAT | O_TRUNC) : 0),
+                            S_IRWXU);
+                } else {
+                    superp_fd[i] = open(full_name.str().c_str(),
+                            O_RDWR | O_LARGEFILE | O_DIRECT |
+                            (new_file ? (O_CREAT | O_TRUNC) : 0),
+                            S_IRWXU);
+                }
+            }
+        }
+        else{
+            //if(full_name.str() == ("/hpgp_data/" + pt.get<std::string>("graph.name")))
+	    if(full_name.str() == (vm["graphpath"].as<std::string>() + pt.get<std::string>("graph.name")))
+            {
+		//we don't want to truncate graph file
+                superp_fd[i] = hdfs_io::get_instance().open(full_name.str().c_str(), hdfs_io::RDONLY);
+            }
+            else{
+                superp_fd[i] = hdfs_io::get_instance().open(full_name.str().c_str(), (hdfs_io::RDONLY | hdfs_io::WRONLY));
+            }
+        }
+        superp_fname[i] = full_name.str();
+        //std::cout << superp_fname[i] << " " << superp_fd[i] << std::endl;
+        if(superp_fd[i] == -1) {
 	  BOOST_LOG_TRIVIAL(fatal) << "Unable to open stream file:" <<
 	    strerror(errno);
 	  exit(-1);
@@ -719,7 +800,14 @@ namespace x_lib {
 	    io_queue->add_work(this);
 	    while(!flush_complete);
 	  }
-	  rewind_file(superp_fd[i]);
+	  // reopen the file for HDFS library
+          if(vm.count("hdfs")){
+            using namespace x_lib;
+            hdfs_io::get_instance().turnOnRefreshWR(superp_fd[i]);
+            hdfs_io::get_instance().refreshReadHandle(superp_fd[i]);
+          }else{
+            rewind_file(superp_fd[i]);
+          }
 	  disk_pos[i] = 0;
 	}
 	request_superp = -1;
@@ -760,9 +848,24 @@ namespace x_lib {
       }
       
       disk_pos[superp] = 0;
-      if(disk_bytes[superp] > 0) {
-	rewind_file(superp_fd[superp]);
-	truncate_file(superp_fd[superp]);
+      if(disk_bytes[superp] > 0) {  
+	//reopen file for hdfs library
+        //for fuse using O_TRUNC to truncate the file
+	//for libhdfs and libhdfs3 reopen the file in WRITEONLY mode implies truncating the file
+        if(vm.count("fuse")){
+            close(superp_fd[superp]);
+            superp_fd[superp] = open(superp_fname[superp].c_str(), O_RDWR | O_LARGEFILE | O_CREAT | O_TRUNC,
+                                    S_IRWXU);
+        }else if(vm.count("hdfs")){
+            using namespace x_lib;
+            hdfs_io::get_instance().turnOnRefreshWR(superp_fd[superp]);
+            hdfs_io::get_instance().refreshWriteHandle(superp_fd[superp]);
+            hdfs_io::get_instance().refreshReadHandle(superp_fd[superp]);
+        }
+        else{
+            rewind_file(superp_fd[superp]);
+            truncate_file(superp_fd[superp]);
+        }
 	disk_bytes[superp] = 0;
       }
     }
