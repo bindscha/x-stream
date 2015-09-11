@@ -84,7 +84,6 @@ int main(int argc, const char* argv[])
 {
   /* Parse the cmd line */
   setup_options(argc, argv);
-
   BOOST_LOG_TRIVIAL(info) << "STARTUP";
   BOOST_LOG_TRIVIAL(info) << "CORE::GRAPH " << vm["graph"].as<std::string>();
   BOOST_LOG_TRIVIAL(info) << "CORE::ALGORITHM " << vm["benchmark"].as<std::string>();

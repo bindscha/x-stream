@@ -30,6 +30,10 @@ extern boost::program_options::variables_map vm;
 static void setup_options(int argc, const char* argv[])
 {
   desc.add_options()
+    ( "graphpath", boost::program_options::value<std::string>()->default_value("/hpgp_data"))
+    ( "filename", boost::program_options::value<std::string>()->default_value("result.out"))
+    ( "hdfs", "HDFS IO")
+    ( "fuse", "HDFS FUSE")
     ( "help,h", "Produce help message")
     ( "processors,p",  boost::program_options::value<unsigned long>()->default_value(1), 
       "Number of processors")

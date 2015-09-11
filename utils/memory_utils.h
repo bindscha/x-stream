@@ -30,6 +30,8 @@
 #include<zlib.h>
 #include<aio.h>
 #include "boost_log_wrapper.h"
+#include "../utils/options_utils.h"
+#include "../core/hdfs_io.h"
 
 extern unsigned long stat_bytes_read;
 extern unsigned long stat_bytes_written;
@@ -94,12 +96,22 @@ static void* map_file_memory(int fd,
   return mapped_file;
 }
 
+//  HDFS interface is added in this function
 static void truncate_file(int fd)
 {
-  if(ftruncate(fd, 0)) {
-    BOOST_LOG_TRIVIAL(fatal) << "file truncate failed:" << strerror(errno);
-    exit(-1);
-  }
+    if (! vm.count("hdfs")){
+        if (ftruncate(fd, 0)) {
+            BOOST_LOG_TRIVIAL(fatal) << "file truncate failed:" << strerror(errno);
+            exit(-1);
+        }
+    }
+    else{
+        using namespace x_lib;
+        if (hdfs_io::get_instance().ftruncate(fd, 0)) {
+            BOOST_LOG_TRIVIAL(fatal) << "file truncate failed:" << strerror(errno);
+            exit(-1);
+        }
+    }
 }
 
 static void check_lseek_result(off_t result)
@@ -110,37 +122,78 @@ static void check_lseek_result(off_t result)
   }
 }
 
+//  HDFS interface is added in this function
 static unsigned long get_file_size(int fd)
 {
-  off_t fsize, cpos;
-  cpos  = lseek(fd, 0, SEEK_CUR);
-  check_lseek_result(cpos);
-  fsize = lseek(fd, 0, SEEK_END);
-  check_lseek_result(fsize);
-  cpos  = lseek(fd, cpos, SEEK_SET);
-  check_lseek_result(cpos);
-  return fsize;
+    if (! vm.count("hdfs")){
+        off_t fsize, cpos;
+        cpos = lseek(fd, 0, SEEK_CUR);
+        check_lseek_result(cpos);
+        fsize = lseek(fd, 0, SEEK_END);
+        check_lseek_result(fsize);
+        cpos = lseek(fd, cpos, SEEK_SET);
+        check_lseek_result(cpos);
+        printf("my size is %lu\n", fsize);
+        return fsize;
+    }
+    else{
+        using namespace x_lib;
+        return hdfs_io::get_instance().getFileSize(fd);
+    }
 }
 
+//  HDFS interface is added in this function
 static void rewind_file(int fd)
 {
-  unsigned long cpos  = lseek(fd, 0, SEEK_SET);
+  unsigned long cpos; 
+  if (! vm.count("hdfs")){
+    cpos = lseek(fd, 0, SEEK_SET);
+  }
+  else{
+    using namespace x_lib;
+    //lseek might fail
+    //so this function is not used for LIBHDFS and LIBHDFS3
+    cpos = hdfs_io::get_instance().lseek(fd, 0);
+  }
   check_lseek_result(cpos);
 }
 
+//  HDFS interface is added in this function
 static void set_filepos(int fd, unsigned long pos)
 {
-  unsigned long cpos  = lseek(fd, pos, SEEK_SET);
+  unsigned long cpos;
+  if (! vm.count("hdfs")){
+    cpos = lseek(fd, pos, SEEK_SET);
+  }
+  else{
+    using namespace x_lib;
+    cpos = hdfs_io::get_instance().lseek(fd, pos);
+  }
   check_lseek_result(cpos);
 }
 
+//  HDFS interface is added in this function
 static void write_to_file(int fd, 
 			  unsigned char *output,
 			  unsigned long bytes_to_write) 
 {
   __sync_fetch_and_add(&stat_bytes_written, bytes_to_write);
+  if(vm.count("hdfs")){
+      using namespace x_lib;
+      //if the file description for write operation is closed
+      //this function call will open it
+      //if it's not closed, this function does nothing
+      hdfs_io::get_instance().refreshWriteHandle(fd);
+  }
   while(bytes_to_write) {
-    unsigned long bytes_written = write(fd, output, bytes_to_write);
+    unsigned long bytes_written;
+    if (! vm.count("hdfs")){
+        bytes_written = write(fd, output, bytes_to_write);
+    }
+    else{
+        using namespace x_lib;
+        bytes_written = hdfs_io::get_instance().write(fd, output, bytes_to_write);
+    }
     if(bytes_written == -1UL) {
       if(errno != EAGAIN) {
 	BOOST_LOG_TRIVIAL(fatal) << 
@@ -155,14 +208,23 @@ static void write_to_file(int fd,
   }
 }
 
-static void read_from_file(int fd, 
+//  HDFS interface is added in this function
+static int read_from_file(int fd, 
 			   unsigned char *input,
 			   unsigned long bytes_to_read) 
 {
   __sync_fetch_and_add(&stat_bytes_read, bytes_to_read);
   while(bytes_to_read) {
-    unsigned long bytes_read = read(fd, input, bytes_to_read);
+    unsigned long bytes_read;
+    if (! vm.count("hdfs")){
+      bytes_read = read(fd, input, bytes_to_read);
+    }
+    else{
+      using namespace x_lib;
+      bytes_read = hdfs_io::get_instance().read(fd, input, bytes_to_read);
+    }
     if(bytes_read == -1UL) {
+      return -1;
       if(errno != EAGAIN) {
 	BOOST_LOG_TRIVIAL(fatal) << 
 	  "Stream readin unsuccessful:" << strerror(errno);
@@ -178,21 +240,31 @@ static void read_from_file(int fd,
       bytes_to_read -= bytes_read;
     }
   }
+  return 0;
 }
 
 // Assume we can read in one shot
-static void read_from_file_atomic(int fd, 
+//  HDFS interface is added in this function
+static int read_from_file_atomic(int fd, 
 				  unsigned char *input,
 				  unsigned long bytes_to_read) 
 {
   __sync_fetch_and_add(&stat_bytes_read, bytes_to_read);
   while(bytes_to_read) {
-    unsigned long bytes_read = read(fd, input, bytes_to_read);
+    unsigned long bytes_read;
+    if (! vm.count("hdfs")){
+      bytes_read = read(fd, input, bytes_to_read);
+    }
+    else{
+      using namespace x_lib;
+      bytes_read = hdfs_io::get_instance().read(fd, input, bytes_to_read);
+    }
     if(bytes_read == -1UL) {
+      return -1;
       if(errno != EAGAIN) {
 	BOOST_LOG_TRIVIAL(fatal) << 
 	  "Stream readin unsuccessful:" << strerror(errno);
-	exit(-1);
+        exit(-1);
       }
     }
     else {
@@ -200,6 +272,7 @@ static void read_from_file_atomic(int fd,
       bytes_to_read = 0; // break
     }
   }
+  return 0;
 }
 
 /* report a zlib error */
