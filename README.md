@@ -8,7 +8,7 @@ X-Stream is a graph processing system for analytics on big graphs using a single
 
 Installation
 ------------
-Please see the file called INSTALL.
+Please see the file called [INSTALL.md](INSTALL.md).
 
 Getting started
 ---------------
@@ -31,7 +31,11 @@ Please note that that if you do not run the program as superuser, you will recei
 
 Licensing
 ---------
-Please see the file called LICENSE.
+Please see the file called [LICENSE.md](LICENSE.md).
+
+HDFS support
+------------
+X-Stream plays nice with the Hadoop file system (HDFS). Please see the file called [HDFS.md](HDFS.md).
 
 Python support
 --------------
