@@ -60,15 +60,16 @@ namespace x_lib {
     for(unsigned long i=0;i<config->num_ioqs;i++) {
       std::stringstream disk_mnt_pt;
       disk_mnt_pt << "disk.mnt" << i;
-      const char *mtpt;
+      std::string mtpt;
       try {
-	mtpt = pt.get<std::string>(disk_mnt_pt.str().c_str()).c_str();
+	mtpt = pt.get<std::string>(disk_mnt_pt.str().c_str());
       }
       catch (...) {
 	BOOST_LOG_TRIVIAL(warn) << "No mount point specified for disk" << i
 				<< ", falling back to current directory";
-	mtpt = get_current_wd(); // Note memory will leak here but bounded by
-	                         // number of disks in use * wd string size
+    char *cwd = get_current_wd();
+    mtpt = cwd;
+    free(cwd);
       }
       disk_ioq_array[i] = new ioq(mtpt);
       disk_io *new_disk = new disk_io(config->stream_unit, disk_ioq_array[i]); 

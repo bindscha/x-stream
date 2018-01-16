@@ -36,9 +36,9 @@ namespace x_lib {
     boost::condition_variable cond_var;
     disk_stream * queue;
     volatile bool terminate;
-    const char* mnt_pt;
+    const std::string mnt_pt;
   public:
-    ioq(const char *mnt_pt_in)
+    ioq(const std::string &mnt_pt_in)
       :mnt_pt(mnt_pt_in)
     {
       queue = NULL;
@@ -55,7 +55,7 @@ namespace x_lib {
     disk_stream* get_work();
     const char* get_mnt_pt()
     {
-      return mnt_pt;
+      return mnt_pt.c_str();
     }
   };
 

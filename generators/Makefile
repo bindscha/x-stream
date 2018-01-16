@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS = -std=c++0x -DNDEBUG -O3 -Wall -Drestrict=__restrict__ -ffast-math -L/usr/local/lib
-#CFLAGS = -std=c++0x -g -O3 -Wall -Drestrict=__restrict__ -ffast-math -L/usr/local/lib
+# CFLAGS = -std=c++0x -O0 -g -Wall -Drestrict=__restrict__ -ffast-math -L/usr/local/lib
 CFLAGS += -DVERTEX_TYPE_32
 CFLAGS += -DVALUE_TYPE_32
 CFLAGS += -DNOISE

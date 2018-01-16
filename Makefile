@@ -10,13 +10,12 @@ TARGETS= bin/benchmark_driver bin/mem_speed_sequential bin/sort_edges\
 bin/mem_speed_random bin/zpipe bin/feeder
 
 
-all: $(LIBS) $(TARGETS) generators
+all: directories $(LIBS) $(TARGETS) generators
 
 CXX?= g++
 
 CXXFLAGS?= -O3 -DNDEBUG -Wall -Wno-unused-function -L/usr/local/lib
-#CXXFLAGS?= -O3 -g -Wall -Wno-unused-function
-#CXXFLAGS?= -g
+# CXXFLAGS?= -O0 -g -Wall -Wno-unused-function -L/usr/local/lib
 CXXFLAGS += -Wfatal-errors
 EXTRA_INCLUDES=-include core/types.h
 EXTRA_INCLUDES+=-I/usr/local/include/boost-numeric-bindings
@@ -48,37 +47,37 @@ SYSLIBS = -lboost_system -lboost_program_options -lboost_thread -lz -lrt
 
 
 
--include $(LIBS:.o=.d) $(PROGS:.o=.d) 
+-include $(LIBS:.o=.d) $(PROGS:.o=.d)
 
-$(OBJECT_DIR)/core.o:core/core.cpp 
+$(OBJECT_DIR)/core.o:core/core.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRA_INCLUDES) -c -o $@ $<
 	$(CXX) -MM -MT '$(OBJECT_DIR)/core.o' $< > $(@:.o=.d)
 
-$(OBJECT_DIR)/utils.o:utils/utils.cpp 
+$(OBJECT_DIR)/utils.o:utils/utils.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRA_INCLUDES) -c -o $@ $<
 	$(CXX) -MM -MT '$(OBJECT_DIR)/utils.o' $< > $(@:.o=.d)
 
-$(OBJECT_DIR)/driver.o:benchmarks/driver.cpp 
+$(OBJECT_DIR)/driver.o:benchmarks/driver.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRA_INCLUDES) -c -o $@ $<
 	$(CXX) -MM -MT '$(OBJECT_DIR)/driver.o' $< > $(@:.o=.d)
 
-$(OBJECT_DIR)/sort_edges.o:utils/sort_edges.cpp 
+$(OBJECT_DIR)/sort_edges.o:utils/sort_edges.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRA_INCLUDES) -c -o $@ $<
 	$(CXX) -MM -MT '$(OBJECT_DIR)/sort_edges.o' $< > $(@:.o=.d)
 
-$(OBJECT_DIR)/feeder.o:utils/feeder.cpp 
+$(OBJECT_DIR)/feeder.o:utils/feeder.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRA_INCLUDES) -c -o $@ $<
 	$(CXX) -MM -MT '$(OBJECT_DIR)/feeder.o' $< > $(@:.o=.d)
 
-$(OBJECT_DIR)/mem_speed_sequential.o:utils/mem_speed_sequential.cpp 
+$(OBJECT_DIR)/mem_speed_sequential.o:utils/mem_speed_sequential.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRA_INCLUDES) -c -o $@ $<
 	$(CXX) -MM -MT '$(OBJECT_DIR)/mem_speed_sequential.o' $< > $(@:.o=.d)
 
-$(OBJECT_DIR)/mem_speed_random.o:utils/mem_speed_random.cpp 
+$(OBJECT_DIR)/mem_speed_random.o:utils/mem_speed_random.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRA_INCLUDES) -c -o $@ $<
 	$(CXX) -MM -MT '$(OBJECT_DIR)/mem_speed_random.o' $< > $(@:.o=.d)
 
-$(OBJECT_DIR)/zpipe.o:utils/zpipe.c 
+$(OBJECT_DIR)/zpipe.o:utils/zpipe.c
 	$(CXX) $(CXXFLAGS) $(EXTRA_INCLUDES) -c -o $@ $<
 	$(CXX) -MM -MT '$(OBJECT_DIR)/zpipe.o' $< > $(@:.o=.d)
 
@@ -101,12 +100,16 @@ bin/feeder:$(OBJECT_DIR)/feeder.o $(LIBS)
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBS) $(SYSLIBS)
 
 
-.PHONY: generators
+.PHONY: directories generators
+
+directories:
+	mkdir -p bin/ ${OBJECT_DIR}/
+
 generators:
 	$(MAKE) -C generators
 
 clean:
-	rm -f $(TARGETS) $(LIBS) $(OBJECT_DIR)/*
+	rm -rf $(TARGETS) $(LIBS) $(OBJECT_DIR) bin/
 	$(MAKE) -C generators clean
 
 prefix = /usr/local
@@ -117,7 +120,7 @@ install: all
 	cp generators/rmat $(bindir)
 	cp generators/erdos-renyi $(bindir)
 
-uninstall: 
+uninstall:
 	rm -f $(bindir)/benchmark_driver
 	rm -f $(bindir)/rmat
 	rm -f $(bindir)/erdos-renyi
